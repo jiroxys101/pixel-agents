@@ -399,9 +399,10 @@ export function sendLayout(
   defaultLayout?: Record<string, unknown> | null,
 ): void {
   if (!webview) return;
-  const layout = migrateAndLoadLayout(context, defaultLayout);
+  const result = migrateAndLoadLayout(context, defaultLayout);
   webview.postMessage({
     type: 'layoutLoaded',
-    layout,
+    layout: result?.layout ?? null,
+    wasReset: result?.wasReset ?? false,
   });
 }

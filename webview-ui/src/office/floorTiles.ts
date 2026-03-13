@@ -1,7 +1,7 @@
 /**
  * Floor tile pattern storage and caching.
  *
- * Stores 7 grayscale floor patterns loaded from floors.png.
+ * Stores grayscale floor patterns loaded from individual PNGs in assets/floors/.
  * Uses shared colorize module for HSL tinting (Photoshop-style Colorize).
  * Caches colorized SpriteData by (pattern, h, s, b, c) key.
  */
@@ -10,7 +10,7 @@ import { FALLBACK_FLOOR_COLOR, TILE_SIZE } from '../constants.js';
 import { clearColorizeCache, getColorizedSprite } from './colorize.js';
 import type { FloorColor, SpriteData } from './types.js';
 
-/** Default solid gray 16×16 tile used when floors.png is not loaded */
+/** Default solid gray 16×16 tile used when floor tile PNGs are not loaded */
 const DEFAULT_FLOOR_SPRITE: SpriteData = Array.from(
   { length: TILE_SIZE },
   () => Array(TILE_SIZE).fill(FALLBACK_FLOOR_COLOR) as string[],

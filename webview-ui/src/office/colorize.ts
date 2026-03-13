@@ -76,15 +76,29 @@ export function colorizeSprite(sprite: SpriteData, color: FloorColor): SpriteDat
       // Clamp
       lightness = Math.max(0, Math.min(1, lightness));
 
+      // Preserve original alpha
+      const alpha = extractAlpha(pixel);
+
       // Convert HSL to RGB
       const satFrac = s / 100;
       const hex = hslToHex(h, satFrac, lightness);
-      newRow.push(hex);
+      newRow.push(appendAlpha(hex, alpha));
     }
     result.push(newRow);
   }
 
   return result;
+}
+
+/** Extract alpha from a hex pixel string. Returns 255 for #RRGGBB, parsed value for #RRGGBBAA. */
+function extractAlpha(pixel: string): number {
+  return pixel.length > 7 ? parseInt(pixel.slice(7, 9), 16) : 255;
+}
+
+/** Append alpha to a #RRGGBB hex string, omitting if fully opaque. */
+function appendAlpha(hex: string, alpha: number): string {
+  if (alpha >= 255) return hex;
+  return `${hex}${alpha.toString(16).padStart(2, '0').toUpperCase()}`;
 }
 
 /** Convert HSL (h: 0-360, s: 0-1, l: 0-1) to #RRGGBB hex string */
@@ -175,6 +189,7 @@ export function adjustSprite(sprite: SpriteData, color: FloorColor): SpriteData 
       const r = parseInt(pixel.slice(1, 3), 16);
       const g = parseInt(pixel.slice(3, 5), 16);
       const bv = parseInt(pixel.slice(5, 7), 16);
+      const alpha = extractAlpha(pixel);
       const [origH, origS, origL] = rgbToHsl(r, g, bv);
 
       // Shift hue
@@ -198,7 +213,7 @@ export function adjustSprite(sprite: SpriteData, color: FloorColor): SpriteData 
       lightness = Math.max(0, Math.min(1, lightness));
 
       const hex = hslToHex(newH, newS, lightness);
-      newRow.push(hex);
+      newRow.push(appendAlpha(hex, alpha));
     }
     result.push(newRow);
   }

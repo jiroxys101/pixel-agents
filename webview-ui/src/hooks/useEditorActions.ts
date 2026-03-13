@@ -46,6 +46,7 @@ export interface EditorActions {
   handleTileTypeChange: (type: TileTypeVal) => void;
   handleFloorColorChange: (color: FloorColor) => void;
   handleWallColorChange: (color: FloorColor) => void;
+  handleWallSetChange: (setIndex: number) => void;
   handleSelectedFurnitureColorChange: (color: FloorColor | null) => void;
   handleFurnitureTypeChange: (type: string) => void; // FurnitureType enum or asset ID
   handleDeleteSelected: () => void;
@@ -201,6 +202,14 @@ export function useEditorActions(
       setEditorTick((n) => n + 1);
     },
     [editorState, getOfficeState, saveLayout],
+  );
+
+  const handleWallSetChange = useCallback(
+    (setIndex: number) => {
+      editorState.selectedWallSet = setIndex;
+      setEditorTick((n) => n + 1);
+    },
+    [editorState],
   );
 
   // Track which uid we've already pushed undo for during color editing
@@ -608,6 +617,7 @@ export function useEditorActions(
     handleTileTypeChange,
     handleFloorColorChange,
     handleWallColorChange,
+    handleWallSetChange,
     handleSelectedFurnitureColorChange,
     handleFurnitureTypeChange,
     handleDeleteSelected,

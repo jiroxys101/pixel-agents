@@ -23,7 +23,11 @@ import {
   sendFloorTilesToWebview,
   sendWallTilesToWebview,
 } from './assetLoader.js';
-import { GLOBAL_KEY_SOUND_ENABLED, WORKSPACE_KEY_AGENT_SEATS } from './constants.js';
+import {
+  GLOBAL_KEY_SOUND_ENABLED,
+  LAYOUT_REVISION_KEY,
+  WORKSPACE_KEY_AGENT_SEATS,
+} from './constants.js';
 import { ensureProjectScan } from './fileWatcher.js';
 import type { LayoutWatcher } from './layoutPersistence.js';
 import { readLayoutFromFile, watchLayoutFile, writeLayoutToFile } from './layoutPersistence.js';
@@ -337,7 +341,7 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  /** Export current saved layout to webview-ui/public/assets/default-layout.json (dev utility) */
+  /** Export current saved layout as a versioned default-layout-{N}.json (dev utility) */
   exportDefaultLayout(): void {
     const layout = readLayoutFromFile();
     if (!layout) {
@@ -349,16 +353,27 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
       vscode.window.showErrorMessage('Pixel Agents: No workspace folder found.');
       return;
     }
-    const targetPath = path.join(
-      workspaceRoot,
-      'webview-ui',
-      'public',
-      'assets',
-      'default-layout.json',
-    );
+    const assetsDir = path.join(workspaceRoot, 'webview-ui', 'public', 'assets');
+
+    // Find the next revision number
+    let maxRevision = 0;
+    if (fs.existsSync(assetsDir)) {
+      for (const file of fs.readdirSync(assetsDir)) {
+        const match = /^default-layout-(\d+)\.json$/.exec(file);
+        if (match) {
+          maxRevision = Math.max(maxRevision, parseInt(match[1], 10));
+        }
+      }
+    }
+    const nextRevision = maxRevision + 1;
+    layout[LAYOUT_REVISION_KEY] = nextRevision;
+
+    const targetPath = path.join(assetsDir, `default-layout-${nextRevision}.json`);
     const json = JSON.stringify(layout, null, 2);
     fs.writeFileSync(targetPath, json, 'utf-8');
-    vscode.window.showInformationMessage(`Pixel Agents: Default layout exported to ${targetPath}`);
+    vscode.window.showInformationMessage(
+      `Pixel Agents: Default layout exported as revision ${nextRevision} to ${targetPath}`,
+    );
   }
 
   private startLayoutWatcher(): void {

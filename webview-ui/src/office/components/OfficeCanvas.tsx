@@ -135,6 +135,7 @@ export function OfficeCanvas({
           editorRender = {
             showGrid: true,
             ghostSprite: null,
+            ghostMirrored: false,
             ghostCol: editorState.ghostCol,
             ghostRow: editorState.ghostRow,
             ghostValid: editorState.ghostValid,
@@ -161,6 +162,8 @@ export function OfficeCanvas({
               );
               editorRender.ghostSprite = entry.sprite;
               editorRender.ghostRow = placementRow;
+              editorRender.ghostMirrored =
+                !!entry.mirrorSide && editorState.selectedFurnitureType.endsWith(':left');
               editorRender.ghostValid = canPlaceFurniture(
                 officeState.getLayout(),
                 editorState.selectedFurnitureType,
@@ -183,6 +186,8 @@ export function OfficeCanvas({
                 editorRender.ghostSprite = entry.sprite;
                 editorRender.ghostCol = ghostCol;
                 editorRender.ghostRow = ghostRow;
+                editorRender.ghostMirrored =
+                  !!entry.mirrorSide && draggedItem.type.endsWith(':left');
                 editorRender.ghostValid = canPlaceFurniture(
                   officeState.getLayout(),
                   draggedItem.type,

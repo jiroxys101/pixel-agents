@@ -16,7 +16,9 @@ export const TileType = {
   FLOOR_5: 5,
   FLOOR_6: 6,
   FLOOR_7: 7,
-  VOID: 8,
+  FLOOR_8: 8,
+  FLOOR_9: 9,
+  VOID: 255,
 } as const;
 export type TileType = (typeof TileType)[keyof typeof TileType];
 
@@ -49,7 +51,7 @@ export const Direction = {
 } as const;
 export type Direction = (typeof Direction)[keyof typeof Direction];
 
-/** 2D array of hex color strings (or '' for transparent). [row][col] */
+/** 2D array of hex color strings: '' = transparent, '#RRGGBB' = opaque, '#RRGGBBAA' = semi-transparent. [row][col] */
 export type SpriteData = string[][];
 
 export interface Seat {
@@ -72,6 +74,8 @@ export interface FurnitureInstance {
   y: number;
   /** Y value used for depth sorting (typically bottom edge) */
   zY: number;
+  /** Render-time horizontal flip flag (for mirrored side variants) */
+  mirrored?: boolean;
 }
 
 export interface ToolActivity {
@@ -80,19 +84,6 @@ export interface ToolActivity {
   done: boolean;
   permissionWait?: boolean;
 }
-
-export const FurnitureType = {
-  // Original hand-drawn sprites (kept for backward compat)
-  DESK: 'desk',
-  BOOKSHELF: 'bookshelf',
-  PLANT: 'plant',
-  COOLER: 'cooler',
-  WHITEBOARD: 'whiteboard',
-  CHAIR: 'chair',
-  PC: 'pc',
-  LAMP: 'lamp',
-} as const;
-export type FurnitureType = (typeof FurnitureType)[keyof typeof FurnitureType];
 
 export const EditTool = {
   TILE_PAINT: 'tile_paint',
@@ -106,7 +97,7 @@ export const EditTool = {
 export type EditTool = (typeof EditTool)[keyof typeof EditTool];
 
 export interface FurnitureCatalogEntry {
-  type: string; // FurnitureType enum or asset ID
+  type: string; // asset ID from furniture manifest
   label: string;
   footprintW: number;
   footprintH: number;
@@ -121,11 +112,13 @@ export interface FurnitureCatalogEntry {
   backgroundTiles?: number;
   /** Whether this item can be placed on wall tiles */
   canPlaceOnWalls?: boolean;
+  /** Whether this is a side-oriented asset that produces a mirrored "left" variant */
+  mirrorSide?: boolean;
 }
 
 export interface PlacedFurniture {
   uid: string;
-  type: string; // FurnitureType enum or asset ID
+  type: string; // asset ID from furniture manifest
   col: number;
   row: number;
   /** Optional color override for furniture */
@@ -140,6 +133,8 @@ export interface OfficeLayout {
   furniture: PlacedFurniture[];
   /** Per-tile color settings, parallel to tiles array. null = wall/no color */
   tileColors?: Array<FloorColor | null>;
+  /** Bumped when the bundled default layout changes; forces a reset on existing installs */
+  layoutRevision?: number;
 }
 
 export interface Character {

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { getColorizedSprite } from '../colorize.js';
 import { getColorizedFloorSprite, getFloorPatternCount, hasFloorSprites } from '../floorTiles.js';
 import type { FurnitureCategory, LoadedAssetData } from '../layout/furnitureCatalog.js';
+import { getWallSetCount, getWallSetPreviewSprite } from '../wallTiles.js';
 import {
   buildDynamicCatalog,
   getActiveCategories,
@@ -53,10 +55,12 @@ interface EditorToolbarProps {
   selectedFurnitureColor: FloorColor | null;
   floorColor: FloorColor;
   wallColor: FloorColor;
+  selectedWallSet: number;
   onToolChange: (tool: EditTool) => void;
   onTileTypeChange: (type: TileTypeVal) => void;
   onFloorColorChange: (color: FloorColor) => void;
   onWallColorChange: (color: FloorColor) => void;
+  onWallSetChange: (setIndex: number) => void;
   onSelectedFurnitureColorChange: (color: FloorColor | null) => void;
   onFurnitureTypeChange: (type: string) => void;
   loadedAssets?: LoadedAssetData;
@@ -123,6 +127,68 @@ function FloorPatternPreview({
   );
 }
 
+/** Render a wall set preview showing the first piece (bitmask 0, 16×32) at 1x scale */
+function WallSetPreview({
+  setIndex,
+  color,
+  selected,
+  onClick,
+}: {
+  setIndex: number;
+  color: FloorColor;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const displayW = 32;
+  const displayH = 64;
+  const previewZoom = 2;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = displayW;
+    canvas.height = displayH;
+    ctx.imageSmoothingEnabled = false;
+
+    const sprite = getWallSetPreviewSprite(setIndex);
+    if (!sprite) {
+      ctx.fillStyle = '#444';
+      ctx.fillRect(0, 0, displayW, displayH);
+      return;
+    }
+
+    // Colorize the preview sprite using the same colorize path as rendering
+    const cacheKey = `wall-preview-${setIndex}-${color.h}-${color.s}-${color.b}-${color.c}`;
+    const colorized = getColorizedSprite(cacheKey, sprite, { ...color, colorize: true });
+    const cached = getCachedSprite(colorized, previewZoom);
+    ctx.drawImage(cached, 0, 0);
+  }, [setIndex, color]);
+
+  return (
+    <button
+      onClick={onClick}
+      title={`Wall ${setIndex + 1}`}
+      style={{
+        width: displayW,
+        height: displayH,
+        padding: 0,
+        border: selected ? '2px solid #5a8cff' : '2px solid #4a4a6a',
+        borderRadius: 0,
+        cursor: 'pointer',
+        overflow: 'hidden',
+        flexShrink: 0,
+        background: '#2A2A3A',
+      }}
+    >
+      <canvas ref={canvasRef} style={{ width: displayW, height: displayH, display: 'block' }} />
+    </button>
+  );
+}
+
 /** Slider control for a single color parameter */
 function ColorSlider({
   label,
@@ -171,10 +237,12 @@ export function EditorToolbar({
   selectedFurnitureColor,
   floorColor,
   wallColor,
+  selectedWallSet,
   onToolChange,
   onTileTypeChange,
   onFloorColorChange,
   onWallColorChange,
+  onWallSetChange,
   onSelectedFurnitureColorChange,
   onFurnitureTypeChange,
   loadedAssets,
@@ -439,6 +507,29 @@ export function EditorToolbar({
                 max={100}
                 onChange={(v) => handleWallColorChange('c', v)}
               />
+            </div>
+          )}
+
+          {/* Wall set picker — horizontal carousel at the top */}
+          {getWallSetCount() > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                gap: 4,
+                overflowX: 'auto',
+                flexWrap: 'nowrap',
+                paddingBottom: 2,
+              }}
+            >
+              {Array.from({ length: getWallSetCount() }, (_, i) => (
+                <WallSetPreview
+                  key={i}
+                  setIndex={i}
+                  color={wallColor}
+                  selected={selectedWallSet === i}
+                  onClick={() => onWallSetChange(i)}
+                />
+              ))}
             </div>
           )}
         </div>

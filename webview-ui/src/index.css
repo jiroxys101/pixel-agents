@@ -3,7 +3,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('./fonts/FSPixelSansUnicode-Regular.ttf') format('truetype');
+  src: url('/fonts/FSPixelSansUnicode-Regular.ttf') format('truetype');
 }
 
 :root {

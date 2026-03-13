@@ -121,12 +121,25 @@ export function renderScene(
     const cached = getCachedSprite(f.sprite, zoom);
     const fx = offsetX + f.x * zoom;
     const fy = offsetY + f.y * zoom;
-    drawables.push({
-      zY: f.zY,
-      draw: (c) => {
-        c.drawImage(cached, fx, fy);
-      },
-    });
+    if (f.mirrored) {
+      drawables.push({
+        zY: f.zY,
+        draw: (c) => {
+          c.save();
+          c.translate(fx + cached.width, fy);
+          c.scale(-1, 1);
+          c.drawImage(cached, 0, 0);
+          c.restore();
+        },
+      });
+    } else {
+      drawables.push({
+        zY: f.zY,
+        draw: (c) => {
+          c.drawImage(cached, fx, fy);
+        },
+      });
+    }
   }
 
   // Characters
@@ -334,14 +347,23 @@ export function renderGhostPreview(
   offsetX: number,
   offsetY: number,
   zoom: number,
+  mirrored: boolean = false,
 ): void {
   const cached = getCachedSprite(sprite, zoom);
   const x = offsetX + col * TILE_SIZE * zoom;
   const y = offsetY + row * TILE_SIZE * zoom;
   ctx.save();
   ctx.globalAlpha = GHOST_PREVIEW_SPRITE_ALPHA;
-  ctx.drawImage(cached, x, y);
-  // Tint overlay
+  if (mirrored) {
+    ctx.translate(x + cached.width, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(cached, 0, 0);
+  } else {
+    ctx.drawImage(cached, x, y);
+  }
+  // Tint overlay — reset transform for correct fill position
+  ctx.restore();
+  ctx.save();
   ctx.globalAlpha = GHOST_PREVIEW_TINT_ALPHA;
   ctx.fillStyle = valid ? GHOST_VALID_TINT : GHOST_INVALID_TINT;
   ctx.fillRect(x, y, cached.width, cached.height);
@@ -508,6 +530,7 @@ export type RotateButtonBounds = ButtonBounds;
 export interface EditorRenderState {
   showGrid: boolean;
   ghostSprite: SpriteData | null;
+  ghostMirrored: boolean;
   ghostCol: number;
   ghostRow: number;
   ghostValid: boolean;
@@ -622,6 +645,7 @@ export function renderFrame(
         offsetX,
         offsetY,
         zoom,
+        editor.ghostMirrored,
       );
     }
     if (editor.hasSelection) {

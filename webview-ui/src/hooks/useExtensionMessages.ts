@@ -30,10 +30,15 @@ export interface FurnitureAsset {
   footprintH: number;
   isDesk: boolean;
   canPlaceOnWalls: boolean;
-  partOfGroup?: boolean;
   groupId?: string;
   canPlaceOnSurfaces?: boolean;
   backgroundTiles?: number;
+  orientation?: string;
+  state?: string;
+  mirrorSide?: boolean;
+  rotationScheme?: string;
+  animationGroup?: string;
+  frame?: number;
 }
 
 export interface WorkspaceFolder {
@@ -49,6 +54,7 @@ export interface ExtensionMessageState {
   subagentTools: Record<number, Record<string, ToolActivity[]>>;
   subagentCharacters: SubagentCharacter[];
   layoutReady: boolean;
+  layoutWasReset: boolean;
   loadedAssets?: { catalog: FurnitureAsset[]; sprites: Record<string, string[][]> };
   workspaceFolders: WorkspaceFolder[];
 }
@@ -76,6 +82,7 @@ export function useExtensionMessages(
   >({});
   const [subagentCharacters, setSubagentCharacters] = useState<SubagentCharacter[]>([]);
   const [layoutReady, setLayoutReady] = useState(false);
+  const [layoutWasReset, setLayoutWasReset] = useState(false);
   const [loadedAssets, setLoadedAssets] = useState<
     { catalog: FurnitureAsset[]; sprites: Record<string, string[][]> } | undefined
   >();
@@ -120,6 +127,9 @@ export function useExtensionMessages(
         pendingAgents = [];
         layoutReadyRef.current = true;
         setLayoutReady(true);
+        if (msg.wasReset) {
+          setLayoutWasReset(true);
+        }
         if (os.characters.size > 0) {
           saveAgentSeats(os);
         }
@@ -365,9 +375,9 @@ export function useExtensionMessages(
         console.log(`[Webview] Received ${sprites.length} floor tile patterns`);
         setFloorSprites(sprites);
       } else if (msg.type === 'wallTilesLoaded') {
-        const sprites = msg.sprites as string[][][];
-        console.log(`[Webview] Received ${sprites.length} wall tile sprites`);
-        setWallSprites(sprites);
+        const sets = msg.sets as string[][][][];
+        console.log(`[Webview] Received ${sets.length} wall tile set(s)`);
+        setWallSprites(sets);
       } else if (msg.type === 'workspaceFolders') {
         const folders = msg.folders as WorkspaceFolder[];
         setWorkspaceFolders(folders);
@@ -400,6 +410,7 @@ export function useExtensionMessages(
     subagentTools,
     subagentCharacters,
     layoutReady,
+    layoutWasReset,
     loadedAssets,
     workspaceFolders,
   };

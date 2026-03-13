@@ -7,6 +7,7 @@ import {
   LAYOUT_FILE_DIR,
   LAYOUT_FILE_NAME,
   LAYOUT_FILE_POLL_INTERVAL_MS,
+  LAYOUT_REVISION_KEY,
   WORKSPACE_KEY_LAYOUT,
 } from './constants.js';
 
@@ -47,9 +48,15 @@ export function writeLayoutToFile(layout: Record<string, unknown>): void {
   }
 }
 
+export interface LayoutLoadResult {
+  layout: Record<string, unknown>;
+  /** True when the user's saved layout was replaced by a newer bundled default */
+  wasReset: boolean;
+}
+
 /**
  * Load layout with migration from workspace state:
- * 1. If file exists → return it
+ * 1. If file exists → return it (reset if bundled default has a newer revision)
  * 2. Else if workspace state has layout → write to file, clear workspace state, return it
  * 3. Else if defaultLayout provided → write to file, return it
  * 4. Else → return null
@@ -57,12 +64,21 @@ export function writeLayoutToFile(layout: Record<string, unknown>): void {
 export function migrateAndLoadLayout(
   context: ExtensionContext,
   defaultLayout?: Record<string, unknown> | null,
-): Record<string, unknown> | null {
-  // 1. Try file
+): LayoutLoadResult | null {
+  // 1. Try file — but reset if bundled default has a newer revision
   const fromFile = readLayoutFromFile();
   if (fromFile) {
+    const fileRevision = (fromFile[LAYOUT_REVISION_KEY] as number) ?? 0;
+    const defaultRevision = (defaultLayout?.[LAYOUT_REVISION_KEY] as number) ?? 0;
+    if (defaultRevision > fileRevision) {
+      console.log(
+        `[Pixel Agents] Layout revision outdated (${fileRevision} < ${defaultRevision}), resetting to bundled default`,
+      );
+      writeLayoutToFile(defaultLayout!);
+      return { layout: defaultLayout!, wasReset: true };
+    }
     console.log('[Pixel Agents] Layout loaded from file');
-    return fromFile;
+    return { layout: fromFile, wasReset: false };
   }
 
   // 2. Migrate from workspace state
@@ -71,14 +87,14 @@ export function migrateAndLoadLayout(
     console.log('[Pixel Agents] Migrating layout from workspace state to file');
     writeLayoutToFile(fromState);
     context.workspaceState.update(WORKSPACE_KEY_LAYOUT, undefined);
-    return fromState;
+    return { layout: fromState, wasReset: false };
   }
 
   // 3. Use bundled default
   if (defaultLayout) {
     console.log('[Pixel Agents] Writing bundled default layout to file');
     writeLayoutToFile(defaultLayout);
-    return defaultLayout;
+    return { layout: defaultLayout, wasReset: false };
   }
 
   // 4. Nothing

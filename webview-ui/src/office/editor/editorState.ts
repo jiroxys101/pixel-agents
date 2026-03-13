@@ -6,13 +6,16 @@ export class EditorState {
   isEditMode = false;
   activeTool: EditTool = EditTool.SELECT;
   selectedTileType: TileTypeVal = TileType.FLOOR_1;
-  selectedFurnitureType: string = 'desk'; // FurnitureType.DESK or asset ID
+  selectedFurnitureType = ''; // asset ID, set when catalog loads
 
   // Floor color settings (applied to new tiles when painting)
   floorColor: FloorColor = { ...DEFAULT_FLOOR_COLOR };
 
   // Wall color settings (applied to new wall tiles when painting)
   wallColor: FloorColor = { ...DEFAULT_WALL_COLOR };
+
+  // Selected wall set index (0-based, indexes into loaded wall sets)
+  selectedWallSet = 0;
 
   // Tracks toggle direction during wall drag (true=adding walls, false=removing, null=undecided)
   wallDragAdding: boolean | null = null;

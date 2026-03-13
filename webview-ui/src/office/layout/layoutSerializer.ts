@@ -7,15 +7,8 @@ import type {
   Seat,
   TileType as TileTypeVal,
 } from '../types.js';
-import {
-  DEFAULT_COLS,
-  DEFAULT_ROWS,
-  Direction,
-  FurnitureType,
-  TILE_SIZE,
-  TileType,
-} from '../types.js';
-import { getCatalogEntry } from './furnitureCatalog.js';
+import { DEFAULT_COLS, DEFAULT_ROWS, Direction, TILE_SIZE, TileType } from '../types.js';
+import { getCatalogEntry, getOrientationInGroup } from './furnitureCatalog.js';
 
 /** Convert flat tile array from layout into 2D grid */
 export function layoutToTileMap(layout: OfficeLayout): TileTypeVal[][] {
@@ -90,7 +83,16 @@ export function layoutToFurnitureInstances(furniture: PlacedFurniture[]): Furnit
       );
     }
 
-    instances.push({ sprite, x, y, zY });
+    // Determine if this instance should be mirrored (side asset used in "left" orientation)
+    let mirrored = false;
+    if (entry.mirrorSide) {
+      const orientInGroup = getOrientationInGroup(item.type);
+      if (orientInGroup === 'left') {
+        mirrored = true;
+      }
+    }
+
+    instances.push({ sprite, x, y, zY, ...(mirrored ? { mirrored: true } : {}) });
   }
   return instances;
 }
@@ -149,6 +151,7 @@ function orientationToFacing(orientation: string): Direction {
     case 'left':
       return Direction.LEFT;
     case 'right':
+    case 'side':
       return Direction.RIGHT;
     default:
       return Direction.DOWN;
@@ -236,48 +239,22 @@ export function getSeatTiles(seats: Map<string, Seat>): Set<string> {
 /** Default floor colors for the two rooms */
 const DEFAULT_LEFT_ROOM_COLOR: FloorColor = { h: 35, s: 30, b: 15, c: 0 }; // warm beige
 const DEFAULT_RIGHT_ROOM_COLOR: FloorColor = { h: 25, s: 45, b: 5, c: 10 }; // warm brown
-const DEFAULT_CARPET_COLOR: FloorColor = { h: 280, s: 40, b: -5, c: 0 }; // purple
-const DEFAULT_DOORWAY_COLOR: FloorColor = { h: 35, s: 25, b: 10, c: 0 }; // tan
 
-/** Create the default office layout matching the current hardcoded office */
+/** Create a minimal fallback layout (used only when no default-layout.json exists) */
 export function createDefaultLayout(): OfficeLayout {
   const W = TileType.WALL;
   const F1 = TileType.FLOOR_1;
   const F2 = TileType.FLOOR_2;
-  const F3 = TileType.FLOOR_3;
-  const F4 = TileType.FLOOR_4;
 
   const tiles: TileTypeVal[] = [];
   const tileColors: Array<FloorColor | null> = [];
 
   for (let r = 0; r < DEFAULT_ROWS; r++) {
     for (let c = 0; c < DEFAULT_COLS; c++) {
-      if (r === 0 || r === DEFAULT_ROWS - 1) {
+      if (r === 0 || r === DEFAULT_ROWS - 1 || c === 0 || c === DEFAULT_COLS - 1) {
         tiles.push(W);
         tileColors.push(null);
-        continue;
-      }
-      if (c === 0 || c === DEFAULT_COLS - 1) {
-        tiles.push(W);
-        tileColors.push(null);
-        continue;
-      }
-      if (c === 10) {
-        if (r >= 4 && r <= 6) {
-          tiles.push(F4);
-          tileColors.push(DEFAULT_DOORWAY_COLOR);
-        } else {
-          tiles.push(W);
-          tileColors.push(null);
-        }
-        continue;
-      }
-      if (c >= 15 && c <= 18 && r >= 7 && r <= 9) {
-        tiles.push(F3);
-        tileColors.push(DEFAULT_CARPET_COLOR);
-        continue;
-      }
-      if (c < 10) {
+      } else if (c < 10) {
         tiles.push(F1);
         tileColors.push(DEFAULT_LEFT_ROOM_COLOR);
       } else {
@@ -287,32 +264,44 @@ export function createDefaultLayout(): OfficeLayout {
     }
   }
 
-  const furniture: PlacedFurniture[] = [
-    { uid: 'desk-left', type: FurnitureType.DESK, col: 4, row: 3 },
-    { uid: 'desk-right', type: FurnitureType.DESK, col: 13, row: 3 },
-    { uid: 'bookshelf-1', type: FurnitureType.BOOKSHELF, col: 1, row: 5 },
-    { uid: 'plant-left', type: FurnitureType.PLANT, col: 1, row: 1 },
-    { uid: 'cooler-1', type: FurnitureType.COOLER, col: 17, row: 7 },
-    { uid: 'plant-right', type: FurnitureType.PLANT, col: 18, row: 1 },
-    { uid: 'whiteboard-1', type: FurnitureType.WHITEBOARD, col: 15, row: 0 },
-    // Left desk chairs
-    { uid: 'chair-l-top', type: FurnitureType.CHAIR, col: 4, row: 2 },
-    { uid: 'chair-l-bottom', type: FurnitureType.CHAIR, col: 5, row: 5 },
-    { uid: 'chair-l-left', type: FurnitureType.CHAIR, col: 3, row: 4 },
-    { uid: 'chair-l-right', type: FurnitureType.CHAIR, col: 6, row: 3 },
-    // Right desk chairs
-    { uid: 'chair-r-top', type: FurnitureType.CHAIR, col: 13, row: 2 },
-    { uid: 'chair-r-bottom', type: FurnitureType.CHAIR, col: 14, row: 5 },
-    { uid: 'chair-r-left', type: FurnitureType.CHAIR, col: 12, row: 4 },
-    { uid: 'chair-r-right', type: FurnitureType.CHAIR, col: 15, row: 3 },
-  ];
-
-  return { version: 1, cols: DEFAULT_COLS, rows: DEFAULT_ROWS, tiles, tileColors, furniture };
+  // Minimal fallback with no furniture — the default-layout.json provides the real default
+  return { version: 1, cols: DEFAULT_COLS, rows: DEFAULT_ROWS, tiles, tileColors, furniture: [] };
 }
 
 /** Serialize layout to JSON string */
 export function serializeLayout(layout: OfficeLayout): string {
   return JSON.stringify(layout);
+}
+
+// ── Furniture type migration ────────────────────────────────────
+
+/** Map old hardcoded FurnitureType values to new manifest-based IDs */
+const LEGACY_TYPE_MAP: Record<string, string | null> = {
+  desk: 'DESK_FRONT',
+  chair: 'WOODEN_CHAIR_FRONT',
+  bookshelf: 'BOOKSHELF',
+  plant: 'PLANT',
+  cooler: null, // no equivalent in new assets — remove
+  whiteboard: 'WHITEBOARD',
+  pc: 'PC_FRONT_OFF',
+  lamp: null, // no equivalent in new assets — remove
+};
+
+/** Migrate old furniture type strings to new manifest IDs */
+function migrateFurnitureTypes(furniture: PlacedFurniture[]): PlacedFurniture[] {
+  const migrated: PlacedFurniture[] = [];
+  for (const item of furniture) {
+    const newType = LEGACY_TYPE_MAP[item.type];
+    if (newType === undefined) {
+      // Not a legacy type — keep as-is
+      migrated.push(item);
+    } else if (newType !== null) {
+      // Migrate to new type
+      migrated.push({ ...item, type: newType });
+    }
+    // newType === null → remove the item (no equivalent)
+  }
+  return migrated;
 }
 
 /** Deserialize layout from JSON string, migrating old tile types if needed */
@@ -338,11 +327,23 @@ export function migrateLayoutColors(layout: OfficeLayout): OfficeLayout {
 
 /**
  * Migrate old layouts that use legacy tile types (TILE_FLOOR=1, WOOD_FLOOR=2, CARPET=3, DOORWAY=4)
- * to the new pattern-based system. If tileColors is already present, no migration needed.
+ * to the new pattern-based system. Also migrates old furniture type strings and old VOID value.
  */
 function migrateLayout(layout: OfficeLayout): OfficeLayout {
+  // Migrate furniture types
+  layout = { ...layout, furniture: migrateFurnitureTypes(layout.furniture) };
+
+  // Migrate old VOID value (was 8, now 255)
+  const OLD_VOID = 8;
+  if (layout.tiles.includes(OLD_VOID as TileTypeVal)) {
+    layout = {
+      ...layout,
+      tiles: layout.tiles.map((t) => (t === OLD_VOID ? (TileType.VOID as TileTypeVal) : t)),
+    };
+  }
+
   if (layout.tileColors && layout.tileColors.length === layout.tiles.length) {
-    return layout; // Already migrated
+    return layout; // Already migrated tile colors
   }
 
   // Check if any tiles use old values (1-4) — these map directly to FLOOR_1-4
@@ -360,14 +361,14 @@ function migrateLayout(layout: OfficeLayout): OfficeLayout {
         tileColors.push(DEFAULT_RIGHT_ROOM_COLOR);
         break;
       case 3: // was CARPET → FLOOR_3 purple
-        tileColors.push(DEFAULT_CARPET_COLOR);
+        tileColors.push({ h: 280, s: 40, b: -5, c: 0 });
         break;
       case 4: // was DOORWAY → FLOOR_4 tan
-        tileColors.push(DEFAULT_DOORWAY_COLOR);
+        tileColors.push({ h: 35, s: 25, b: 10, c: 0 });
         break;
       default:
-        // New tile types (5-7) without colors — use neutral gray
-        tileColors.push(tile > 0 ? { h: 0, s: 0, b: 0, c: 0 } : null);
+        // Floor tile types without colors — use neutral gray
+        tileColors.push(tile > 0 && tile !== TileType.VOID ? { h: 0, s: 0, b: 0, c: 0 } : null);
     }
   }
 
