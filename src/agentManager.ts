@@ -19,7 +19,7 @@ export function getProjectDirPath(cwd?: string): string | null {
   if (!workspacePath) return null;
   const dirName = workspacePath.replace(/[^a-zA-Z0-9-]/g, '-');
   const projectDir = path.join(os.homedir(), '.claude', 'projects', dirName);
-  console.log(`[Pixel Agents] Project dir: ${workspacePath} → ${dirName}`);
+  console.log(`[Pixel office] Project dir: ${workspacePath} → ${dirName}`);
   return projectDir;
 }
 
@@ -54,7 +54,7 @@ export async function launchNewTerminal(
 
   const projectDir = getProjectDirPath(cwd);
   if (!projectDir) {
-    console.log(`[Pixel Agents] No project dir, cannot track agent`);
+    console.log(`[Pixel office] No project dir, cannot track agent`);
     return;
   }
 
@@ -86,7 +86,7 @@ export async function launchNewTerminal(
   agents.set(id, agent);
   activeAgentIdRef.current = id;
   persistAgents();
-  console.log(`[Pixel Agents] Agent ${id}: created for terminal ${terminal.name}`);
+  console.log(`[Pixel office] Agent ${id}: created for terminal ${terminal.name}`);
   webview?.postMessage({ type: 'agentCreated', id, folderName });
 
   ensureProjectScan(
@@ -109,7 +109,7 @@ export async function launchNewTerminal(
     try {
       if (fs.existsSync(agent.jsonlFile)) {
         console.log(
-          `[Pixel Agents] Agent ${id}: found JSONL file ${path.basename(agent.jsonlFile)}`,
+          `[Pixel office] Agent ${id}: found JSONL file ${path.basename(agent.jsonlFile)}`,
         );
         clearInterval(pollTimer);
         jsonlPollTimers.delete(id);
@@ -240,7 +240,7 @@ export function restoreAgents(
 
     agents.set(p.id, agent);
     knownJsonlFiles.add(p.jsonlFile);
-    console.log(`[Pixel Agents] Restored agent ${p.id} → terminal "${p.terminalName}"`);
+    console.log(`[Pixel office] Restored agent ${p.id} → terminal "${p.terminalName}"`);
 
     if (p.id > maxId) maxId = p.id;
     // Extract terminal index from name like "Claude Code #3"
@@ -272,7 +272,7 @@ export function restoreAgents(
         const pollTimer = setInterval(() => {
           try {
             if (fs.existsSync(agent.jsonlFile)) {
-              console.log(`[Pixel Agents] Restored agent ${p.id}: found JSONL file`);
+              console.log(`[Pixel office] Restored agent ${p.id}: found JSONL file`);
               clearInterval(pollTimer);
               jsonlPollTimers.delete(p.id);
               const stat = fs.statSync(agent.jsonlFile);
@@ -354,7 +354,7 @@ export function sendExistingAgents(
     }
   }
   console.log(
-    `[Pixel Agents] sendExistingAgents: agents=${JSON.stringify(agentIds)}, meta=${JSON.stringify(agentMeta)}`,
+    `[Pixel office] sendExistingAgents: agents=${JSON.stringify(agentIds)}, meta=${JSON.stringify(agentMeta)}`,
   );
 
   webview.postMessage({

@@ -24,7 +24,7 @@ export function startFileWatching(
     });
     fileWatchers.set(agentId, watcher);
   } catch (e) {
-    console.log(`[Pixel Agents] fs.watch failed for agent ${agentId}: ${e}`);
+    console.log(`[Pixel office] fs.watch failed for agent ${agentId}: ${e}`);
   }
 
   // Secondary: fs.watchFile (stat-based polling, reliable on macOS)
@@ -33,7 +33,7 @@ export function startFileWatching(
       readNewLines(agentId, agents, waitingTimers, permissionTimers, webview);
     });
   } catch (e) {
-    console.log(`[Pixel Agents] fs.watchFile failed for agent ${agentId}: ${e}`);
+    console.log(`[Pixel office] fs.watchFile failed for agent ${agentId}: ${e}`);
   }
 
   // Tertiary: manual poll as last resort
@@ -91,7 +91,7 @@ export function readNewLines(
       processTranscriptLine(agentId, line, agents, waitingTimers, permissionTimers, webview);
     }
   } catch (e) {
-    console.log(`[Pixel Agents] Read error for agent ${agentId}: ${e}`);
+    console.log(`[Pixel office] Read error for agent ${agentId}: ${e}`);
   }
 }
 
@@ -169,7 +169,7 @@ function scanForNewJsonlFiles(
       if (activeAgentIdRef.current !== null) {
         // Active agent focused → /clear reassignment
         console.log(
-          `[Pixel Agents] New JSONL detected: ${path.basename(file)}, reassigning to agent ${activeAgentIdRef.current}`,
+          `[Pixel office] New JSONL detected: ${path.basename(file)}, reassigning to agent ${activeAgentIdRef.current}`,
         );
         reassignAgentToFile(
           activeAgentIdRef.current,
@@ -252,7 +252,7 @@ function adoptTerminalForFile(
   persistAgents();
 
   console.log(
-    `[Pixel Agents] Agent ${id}: adopted terminal "${terminal.name}" for ${path.basename(jsonlFile)}`,
+    `[Pixel office] Agent ${id}: adopted terminal "${terminal.name}" for ${path.basename(jsonlFile)}`,
   );
   webview?.postMessage({ type: 'agentCreated', id });
 

@@ -1,6 +1,6 @@
-# Contributing to Pixel Agents
+# Contributing to Pixel office
 
-Thanks for your interest in contributing to Pixel Agents! All contributions are welcome — features, bug fixes, documentation improvements, refactors, and more.
+Thanks for your interest in contributing to Pixel office! All contributions are welcome — features, bug fixes, documentation improvements, refactors, and more.
 
 This project is licensed under the [MIT License](LICENSE), so your contributions will be too. No CLA or DCO is required.
 

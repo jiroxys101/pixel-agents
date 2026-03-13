@@ -1,6 +1,6 @@
 <h1 align="center">
     <a href="https://github.com/pablodelucca/pixel-agents/discussions">
-        <img src="webview-ui/public/banner.png" alt="Pixel Agents">
+        <img src="webview-ui/public/banner.png" alt="Pixel office">
     </a>
 </h1>
 
@@ -23,13 +23,13 @@
 
 <br/>
 
-Pixel Agents turns multi-agent AI systems into something you can actually see and manage. Each agent becomes a character in a pixel art office. They walk around, sit at their desk, and visually reflect what they are doing — typing when writing code, reading when searching files, waiting when it needs your attention.
+Pixel office turns multi-agent AI systems into something you can actually see and manage. Each agent becomes a character in a pixel art office. They walk around, sit at their desk, and visually reflect what they are doing — typing when writing code, reading when searching files, waiting when it needs your attention.
 
 Right now it works as a VS Code extension with Claude Code. The vision though, is a fully agent-agnostic, platform-agnostic interface for orchestrating any AI agents, deployable anywhere.
 
-This is the source code for the free [Pixel Agents extension for VS Code](https://marketplace.visualstudio.com/items?itemName=pablodelucca.pixel-agents) — you can install it directly from the marketplace with the full furniture catalog included.
+This is the source code for the free [Pixel office extension for VS Code](https://marketplace.visualstudio.com/items?itemName=pablodelucca.pixel-agents) — you can install it directly from the marketplace with the full furniture catalog included.
 
-![Pixel Agents screenshot](webview-ui/public/Screenshot.jpg)
+![Pixel office screenshot](webview-ui/public/Screenshot.jpg)
 
 ## Features
 
@@ -43,7 +43,7 @@ This is the source code for the free [Pixel Agents extension for VS Code](https:
 - **Diverse characters** — 6 diverse characters. These are based on the amazing work of [JIK-A-4, Metro City](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack).
 
 <p align="center">
-  <img src="webview-ui/public/characters.png" alt="Pixel Agents characters" width="320" height="72" style="image-rendering: pixelated;">
+  <img src="webview-ui/public/characters.png" alt="Pixel office characters" width="320" height="72" style="image-rendering: pixelated;">
 </p>
 
 ## Requirements
@@ -53,7 +53,7 @@ This is the source code for the free [Pixel Agents extension for VS Code](https:
 
 ## Getting Started
 
-If you just want to use Pixel Agents, the easiest way is to download the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=pablodelucca.pixel-agents). If you want to play with the code, develop, or contribute, then:
+If you just want to use Pixel office, the easiest way is to download the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=pablodelucca.pixel-agents). If you want to play with the code, develop, or contribute, then:
 
 ### Install from source
 
@@ -69,7 +69,7 @@ Then press **F5** in VS Code to launch the Extension Development Host.
 
 ### Usage
 
-1. Open the **Pixel Agents** panel (it appears in the bottom panel area alongside your terminal)
+1. Open the **Pixel office** panel (it appears in the bottom panel area alongside your terminal)
 2. Click **+ Agent** to spawn a new Claude Code terminal and its character
 3. Start coding with Claude — watch the character react in real time
 4. Click a character to select it, then click a seat to reassign it
@@ -93,7 +93,7 @@ The grid is expandable up to 64×64 tiles. Click the ghost border outside the cu
 
 The office tileset currently used in this project and available via the extension is **[Office Interior Tileset (16x16)](https://donarg.itch.io/officetileset)** by **Donarg**, available on itch.io for **$2 USD**.
 
-This is the only part of the project that is currently not freely available. The tileset is not included in this repository due to its license. To use Pixel Agents locally with the full set of office furniture and decorations, purchase the tileset and run the asset import pipeline:
+This is the only part of the project that is currently not freely available. The tileset is not included in this repository due to its license. To use Pixel office locally with the full set of office furniture and decorations, purchase the tileset and run the asset import pipeline:
 
 ```bash
 npm run import-tileset
@@ -105,7 +105,7 @@ The extension will still work without the tileset — you'll get the default cha
 
 ## How It Works
 
-Pixel Agents watches Claude Code's JSONL transcript files to track what each agent is doing. When an agent uses a tool (like writing a file or running a command), the extension detects it and updates the character's animation accordingly. No modifications to Claude Code are needed — it's purely observational.
+Pixel office watches Claude Code's JSONL transcript files to track what each agent is doing. When an agent uses a tool (like writing a file or running a command), the extension detects it and updates the character's animation accordingly. No modifications to Claude Code are needed — it's purely observational.
 
 The webview runs a lightweight game loop with canvas rendering, BFS pathfinding, and a character state machine (idle → walk → type/read). Everything is pixel-perfect at integer zoom levels.
 
@@ -152,7 +152,7 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 
 ## Supporting the Project
 
-If you find Pixel Agents useful, consider supporting its development:
+If you find Pixel office useful, consider supporting its development:
 
 <a href="https://github.com/sponsors/pablodelucca">
   <img src="https://img.shields.io/badge/Sponsor-GitHub-ea4aaa?logo=github" alt="GitHub Sponsors">

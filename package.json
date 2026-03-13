@@ -1,6 +1,6 @@
 {
   "name": "pixel-agents",
-  "displayName": "Pixel Agents",
+  "displayName": "Pixel office",
   "description": "Pixel art office where your Claude Code agents come to life as animated characters",
   "version": "1.0.2",
   "publisher": "pablodelucca",
@@ -22,18 +22,18 @@
     "commands": [
       {
         "command": "pixel-agents.showPanel",
-        "title": "Pixel Agents: Show Panel"
+        "title": "Pixel office: Show Panel"
       },
       {
         "command": "pixel-agents.exportDefaultLayout",
-        "title": "Pixel Agents: Export Layout as Default"
+        "title": "Pixel office: Export Layout as Default"
       }
     ],
     "viewsContainers": {
       "panel": [
         {
           "id": "pixel-agents-panel",
-          "title": "Pixel Agents",
+          "title": "Pixel office",
           "icon": "$(window)"
         }
       ]
@@ -43,7 +43,7 @@
         {
           "type": "webview",
           "id": "pixel-agents.panelView",
-          "name": "Pixel Agents"
+          "name": "Pixel office"
         }
       ]
     }
